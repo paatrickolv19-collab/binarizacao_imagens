@@ -1,0 +1,66 @@
+from PIL import Image
+from google.colab import files
+import io
+import matplotlib.pyplot as plt
+
+#Upload da imagem
+print("📤 Faça o upload de uma imagem (JPG, PNG ou BMP):")
+uploaded = files.upload()
+
+#Pega o nome do arquivo enviado
+filename = next(iter(uploaded))
+
+#Abre a imagem e garante que está em RGB
+imagem = Image.open(io.BytesIO(uploaded[filename])).convert("RGB")
+
+#Conversão para tons de cinza
+largura, altura = imagem.size
+imagem_cinza = Image.new("L", (largura, altura))
+
+for y in range(altura):
+    for x in range(largura):
+        r, g, b = imagem.getpixel((x, y))
+        cinza = int(0.299 * r + 0.587 * g + 0.114 * b)
+        imagem_cinza.putpixel((x, y), cinza)
+
+#Salva imagem em tons de cinza
+saida_cinza = filename.split('.')[0] + "_cinza.png"
+imagem_cinza.save(saida_cinza)
+
+#Conversão para pb
+limiar = 128  #Valor de corte
+imagem_pb = Image.new("L", (largura, altura))
+
+for y in range(altura):
+    for x in range(largura):
+        valor = imagem_cinza.getpixel((x, y))
+        novo_valor = 255 if valor >= limiar else 0
+        imagem_pb.putpixel((x, y), novo_valor)
+
+#Salva imagem binarizada
+saida_pb = filename.split('.')[0] + "_pb.png"
+imagem_pb.save(saida_pb)
+
+#Exibe as três imagens
+plt.figure(figsize=(15,5))
+
+plt.subplot(1,3,1)
+plt.imshow(imagem)
+plt.title("Imagem Original (RGB)")
+plt.axis("off")
+
+plt.subplot(1,3,2)
+plt.imshow(imagem_cinza, cmap="gray")
+plt.title("Tons de Cinza (0–255)")
+plt.axis("off")
+
+plt.subplot(1,3,3)
+plt.imshow(imagem_pb, cmap="gray")
+plt.title("Preto e Branco (0 e 255)")
+plt.axis("off")
+
+plt.show()
+
+print(f"Imagens geradas com sucesso:")
+print(f"   - {saida_cinza}")
+print(f"   - {saida_pb}")
